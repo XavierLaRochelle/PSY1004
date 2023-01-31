@@ -1,0 +1,206 @@
+---
+title: "Visualiser les données"
+author: "Xavier La Rochelle"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_section: true
+    theme: readable
+---
+
+---
+
+```{r setup, include=FALSE}
+# Packages
+library(knitr)
+library(readr)
+library(tibble)
+library(sjmisc)
+library(jmv)
+library(ggplot2)
+
+# Affichage
+opts_chunk$set(echo = TRUE)
+
+# Importer les données
+donnees_brutes <- read_csv("~/OneDrive/Documents/Udem/Hiver 2023/PSY1004/Ateliers R/preparation_de_donnees_exemple/ppi_psy1004.csv")  
+
+# Préparer les données 
+df <- as_tibble(data.frame(id = 1:nrow(donnees_brutes)))
+df$age <- donnees_brutes$Age
+df$genre <- factor(donnees_brutes$Genre,
+                   levels = c(1,2),
+                   labels = c("Homme",
+                              "Femme"))
+df$emotionPositive <- donnees_brutes$PANAS_Pos_Pre
+df$symptomesDepressifs <- donnees_brutes$CESD_PreTotal
+```
+
+***Important :*** Ce guide assume que vous savez comment :  
+
+1. rédiger un script RMarkdown (`script_rmarkdown.html`)  
+2. installer et activer des packages (`packages.html`) 
+3. importer une base de données (`importer_les_donnees.html`)  
+4. préparer une base de données (`preparer_les_donnees.html`)  
+
+Les guides associés à chacune de ces étapes sont disponibles sur Studium.  
+
+---
+
+Dans ce guide, nous apprendrons à créer des graphiques pour visualiser des données.
+
+## Nouveau fichier de données!
+
+Les données que nous utiliserons à titre d'exemple dans ce guide (`data_visualisation.csv`) ne seront pas les mêmes que celles des guides précédents (`RCC-5323-F-2020-SM_F1.csv`). J'aurais préféré garder le même fichier de données pour tous les guides mais celui que j'utilisais jusqu'à date ne comprenait qu'une seule variable continue. Pour pouvoir mettre en relation deux variables continues, je suis aller chercher un nouveau fichier de données (`data_visualisation.csv`).
+
+### Importer et préparer les données
+
+Pour vous évitez de tout re-coder, j'ai pris le temps d'écrire la syntaxe nécessaire pour importer et préparer les données. Pour suivre les exemples dans ce guide, vous devrez donc :  
+
+1. avoir téléchargé le fichier `data_visualisation.csv` sur Studium  
+2. noter le `"folder path"` 
+3. utiliser la syntaxe suivante pour préparer les données dans R :  
+
+```{r, eval=FALSE}
+# Packages
+library(readr)
+library(tibble)
+
+# Importer les données
+donnees_brutes <- read_csv("folder path")  
+
+# Préparer les données 
+df <- as_tibble(data.frame(id = 1:nrow(donnees_brutes)))
+df$age <- donnees_brutes$Age
+df$genre <- factor(donnees_brutes$Genre,
+                   levels = c(1,2),
+                   labels = c("Homme", "Femme"))
+df$emotionPositive <- donnees_brutes$PANAS_Pos_Pre
+df$symptomesDepressifs <- donnees_brutes$CESD_PreTotal
+```
+*Note: N'oubliez pas de changer le folder path!*
+
+
+Voici à quoi devrait ressembler votre banque de données après l'étape de préparation :
+```{r}
+df
+```
+
+### Description des variables {.tabset}
+
+Cette nouvelle banque de données ne vient pas d'Odesi donc elle n'est pas accompagnée d'un fichier de documentation. Voici tout de même une brève description des variables qu'elle contient :  
+
+#### Âge {-}
+
+**Type**: continue (de rapport)
+
+**Description**: Âge de l'observation.
+```{r}
+descriptives(df, age)
+```
+
+#### Genre {-}
+
+**Type**: catégorielle (nominale)
+
+**Description**: Genre de l'observation.
+```{r}
+frq(df$genre)
+```
+
+#### Émotions positives {-}
+
+**Type**: continue (de rapport)
+
+**Description**: Score totale d'émotions positives sur l'échelle [*Positive and Negative Affect Schedule*](https://ogg.osu.edu/media/documents/MB%20Stream/PANAS.pdf) (PANAS).
+
+```{r}
+descriptives(df, emotionPositive)
+```
+
+#### Symptômes dépressifs {-}
+
+**Type**: continue (de rapport)
+
+**Description**: score total sur l'échelle  [*Center for Epidemiologic Studies Depression Scale*](http://www.chcr.brown.edu/pcoc/cesdscale.pdf) (CES-D).
+
+```{r}
+descriptives(df, symptomesDepressifs)
+```
+
+# Le package `ggplot2`
+Nous utiliserons le package `ggplot2` pour créer des graphiques. 
+
+```{r}
+library(ggplot2)
+```
+
+
+```{r, eval=FALSE}
+ggplot(df, aes()) + 
+  geom_()
+  labs() + 
+  theme_classic()
+```
+
+
+---
+
+## Histogramme (`geom_histogram`)
+L'histogramme permet de montrer la distribution d'une variable continue ou de dénombrement divisées en intervalles de taille égale. L'axe des X représente les valeurs (ou les intervalles de valeurs) de la variable investiguée et l'axe des Y représente la fréquence (ou la proportion) des réponses. 
+
+```{r}
+ggplot(df, aes(x = emotionPositive)) +
+  geom_histogram(bins = 12) + 
+  theme_classic()
+```
+
+```{r}
+ggplot(df, aes(x = age)) + 
+  geom_histogram(binwidth = 1) + 
+  labs() + 
+  theme_classic()
+```
+
+---
+
+## Bar chart (`geom_bar`)
+```{r}
+ggplot(df, aes(x = genre)) + 
+  geom_bar() + 
+  labs(x = "Genre", y = "Fréquence") + 
+  theme_classic()
+```
+
+---
+
+## Diagramme de dispersion (`geom_point`)
+
+```{r}
+ggplot(df, aes(x = symptomesDepressifs, y = emotionPositive)) + 
+  geom_point() +
+  labs(x = "Symtômes Dépressifs", y = "Émotions positives") +
+  theme_classic()
+```
+
+
+---
+
+## Boxplot (`geom_boxplot`)
+
+```{r}
+ggplot(df, aes(x = genre, y = emotionPositive)) + 
+  geom_boxplot() + 
+  labs(x = "Genre", y = "Émotions Positives") + 
+  theme_classic()
+```
+
+---
+
+# Ressources supplémentaires
+- [Site officiel](https://ggplot2.tidyverse.org/)
+- [Cheat sheet `ggplot2`](https://www.maths.usyd.edu.au/u/UG/SM/STAT3022/r/current/Misc/data-visualization-2.1.pdf)
+
+
